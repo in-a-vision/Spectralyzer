@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <math.h>
 
+#include "spectralyzer_audio.c"
 #include "spectralyzer_display.c"
 
 #include "rvfft_sorenson.c"
@@ -89,7 +90,9 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
+  InitSnd();
   InitGL();
+
 
 	while(!quit) {
 		XWinProc();
@@ -100,6 +103,8 @@ int main(int argc, char* argv[]) {
       XWinFullscreen((fullscreen=!fullscreen));
 
     }
+
+    Rec();
 
     Draw();
 	}

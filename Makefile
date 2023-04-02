@@ -1,6 +1,6 @@
 CC        = gcc
 CCFLAGS   =  
-LDFLAGS   = -lm -lX11 -lGL -lGLU -lGLEW
+LDFLAGS   = -lm -lasound -lX11 -lGL -lGLU -lGLEW
 OBJS      = spectralyzer.obj
 PROGS     = spectralyzer
 RES       = spectralyzer.res

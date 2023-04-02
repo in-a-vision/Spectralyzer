@@ -206,6 +206,18 @@ void XWinDestroy() {
  	XCloseDisplay(xw.dpy);
 }
 
+static const char* fs_txt_ =
+	"#version 310 es"
+	"precision highp float;"
+	"in vec2 v_UV1;"
+	"layout(location=0) out vec4 o_Col;"
+	"uniform sampler2D u_ColTex;"
+	"uniform float u_Dissolve;"
+	"void main() {"
+	"	vec4 col = texture(u_ColTex, v_UV1);"
+	"	col.a *= 1.0 - u_Dissolve;"
+	"	o_Col = col;"
+	"}";
 
 static const char* vs_txt =
 	"precision lowp float;"
@@ -230,6 +242,46 @@ static const char* fs_txt =
 typedef struct Vtx { float x, y, r, g, b; } Vtx;
 static GLuint prg, vtxbuf;
 static GLint uMVP_loc, aPos_loc, aCol_loc;
+
+typedef struct _Image {
+	GLuint w, h, stride, vstride, format, type, datasize, flags;
+	uint8_t *data;
+} Image;
+
+typedef struct _Texture {
+	GLuint id;
+	GLint min, mag, wrap_s, wrap_t, mipmap;
+	GLuint internalformat;
+	Image *img;
+} Texture;
+
+Texture *tex;
+
+int MakeTexture() {
+	tex = malloc(sizeof(Texture));
+	assert(tex);
+	tex->img = malloc(sizeof(Image));
+	assert(tex->img);
+
+	glGenTextures(1, &tex->id);
+	glBindTexture(GL_TEXTURE_2D, tex->id);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glPixelStorei(GL_UNPACK_ROW_LENGTH, tex->img->w);
+//	glTexSubImage2D(GL_TEXTURE_2D, 0, dx, dy, w, h, img->format, img->type, img->data);
+
+}
+
+GLuint V7ImgTex(Texture *tex) {
+	glBindTexture(GL_TEXTURE_2D, tex->id);
+	glTexImage2D(GL_TEXTURE_2D, 0, tex->internalformat, tex->img->w, tex->img->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex->img->data);
+
+	if(tex->mipmap) glGenerateMipmap(GL_TEXTURE_2D);
+	return tex->id;
+}
+
 
 int InitGL() {
 
@@ -268,6 +320,10 @@ int InitGL() {
 	glVertexAttribPointer(aPos_loc, 2, GL_FLOAT, GL_FALSE, sizeof(Vtx), (void*)0);
 	glEnableVertexAttribArray(aCol_loc);
 	glVertexAttribPointer(aCol_loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vtx), (void*)(sizeof(float) * 2));
+
+
+	MakeTexture();
+
 
 	return 0;
 }
