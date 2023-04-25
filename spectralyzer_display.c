@@ -223,32 +223,42 @@ static const char* vs_txt =
 	"precision lowp float;"
 	"uniform mat4 uMVP;"
 	"attribute vec4 aPos;"
-	"attribute vec3 aCol;"
-	"varying vec3 vCol;"
+//	"attribute vec3 aCol;"
+	"attribute vec2 aUV1;"
+//	"varying vec3 vCol;"
+	"varying vec2 vUV1;"
 	"void main()"
 	"{"
-		"vCol = aCol;"
+//		"vCol = aCol;"
+		"vUV1 = aUV1;"
 		"gl_Position = uMVP * aPos;"
 	"}";
 
 static const char* fs_txt =
 	"precision lowp float;"
-	"varying vec3 vCol;"
+//	"varying vec3 vCol;"
+	"varying vec2 vUV1;"
+	"uniform sampler2D uTex;"
 	"void main()"
 	"{"
-		"gl_FragColor = vec4(vCol, 1.0);"
+//		"if(gl_FragCoord.x > 0.0)"
+		"gl_FragColor = texture(uTex, vUV1);"
+//		"else"
+//		"gl_FragColor = vec4(vCol, 1.0);"
 	"}";
 
-typedef struct Vtx { float x, y, r, g, b; } Vtx;
 static GLuint prg, vtxbuf;
-static GLint uMVP_loc, aPos_loc, aCol_loc;
+static GLint uMVP_loc, aPos_loc, aCol_loc, uTex_loc, aUV1_loc;
 
-typedef struct _Image {
+typedef struct Vtx { float x, y, z, r, g, b; } Vtx;
+
+
+typedef struct Image {
 	GLuint w, h, stride, vstride, format, type, datasize, flags;
 	uint8_t *data;
 } Image;
 
-typedef struct _Texture {
+typedef struct Texture {
 	GLuint id;
 	GLint min, mag, wrap_s, wrap_t, mipmap;
 	GLuint internalformat;
@@ -263,6 +273,14 @@ int MakeTexture() {
 	tex->img = malloc(sizeof(Image));
 	assert(tex->img);
 
+	tex->img->w = 1024;
+	tex->img->h = 1024;
+	tex->img->datasize = 1024*1024*4;
+	tex->img->data = malloc(tex->img->datasize);
+	tex->internalformat = GL_RGBA;
+
+
+
 	glGenTextures(1, &tex->id);
 	glBindTexture(GL_TEXTURE_2D, tex->id);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -270,16 +288,16 @@ int MakeTexture() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 	glPixelStorei(GL_UNPACK_ROW_LENGTH, tex->img->w);
+	
 //	glTexSubImage2D(GL_TEXTURE_2D, 0, dx, dy, w, h, img->format, img->type, img->data);
 
 }
 
-GLuint V7ImgTex(Texture *tex) {
+void UpdateTexture(Texture *tex) {
 	glBindTexture(GL_TEXTURE_2D, tex->id);
 	glTexImage2D(GL_TEXTURE_2D, 0, tex->internalformat, tex->img->w, tex->img->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex->img->data);
 
 	if(tex->mipmap) glGenerateMipmap(GL_TEXTURE_2D);
-	return tex->id;
 }
 
 
@@ -311,19 +329,22 @@ int InitGL() {
 
 	uMVP_loc = glGetUniformLocation(prg, "uMVP");
 	aPos_loc = glGetAttribLocation(prg, "aPos");
-	aCol_loc = glGetAttribLocation(prg, "aCol");
+//	aCol_loc = glGetAttribLocation(prg, "aCol");
+	aUV1_loc = glGetAttribLocation(prg, "aUV1");
+	uTex_loc = glGetAttribLocation(prg, "uTex");
 
 	glGenBuffers(1, &vtxbuf);
 	glBindBuffer(GL_ARRAY_BUFFER, vtxbuf);
 
 	glEnableVertexAttribArray(aPos_loc);
-	glVertexAttribPointer(aPos_loc, 2, GL_FLOAT, GL_FALSE, sizeof(Vtx), (void*)0);
-	glEnableVertexAttribArray(aCol_loc);
-	glVertexAttribPointer(aCol_loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vtx), (void*)(sizeof(float) * 2));
+	glVertexAttribPointer(aPos_loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vtx), (void*)0);
+//	glEnableVertexAttribArray(aCol_loc);
+//	glVertexAttribPointer(aCol_loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vtx), (void*)(sizeof(float) * 3));
+	glEnableVertexAttribArray(aUV1_loc);
+	glVertexAttribPointer(aUV1_loc, 2, GL_FLOAT, GL_FALSE, sizeof(Vtx), (void*)(sizeof(float) * 3));
 
 
 	MakeTexture();
-
 
 	return 0;
 }
@@ -357,26 +378,59 @@ GLfloat vertices[] = {
 };
 #endif
 
+static int loops;
+
 void Draw() {
 	float t = GetTime();
 
+	int *data = (int*)tex->img->data;
+	for(int y=0; y<1024; y++)
+		for(int x=0; x<1024; x++) {
+			*data++ = y*x;
+
+		}
+
+	UpdateTexture(tex);
+
+
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	Vtx v[3] = {
-		{ -1.f, -1.f, 1.f, 0.f, 0.f },
-		{  1.f, -1.f, 0.f, 1.f, 0.f },
-		{  0.f,  1.f, 0.f, 0.f, 1.f },
+	Vtx v[6] = {
+		{-1.f, 1.f, 0.f, 1.f, 0.f, },
+		{-1.f,-1.f, 0.f, 0.f, 0.f, },
+		{ 1.f,-1.f, 0.f, 0.f, 1.f, },
+		{-1.f, 1.f, 0.f, 1.f, 0.f, },
+		{ 1.f, 1.f, 0.f, 0.f, 0.f, },
+		{ 1.f,-1.f, 0.f, 0.f, 1.f, },
 	};
-	v[0].r = 0.5f + sinf(t/2.f + PI * 1.f/3.f ) * 0.5f;
-	v[1].g = 0.5f + cosf(t/2.f + PI * 2.f/3.f ) * 0.5f;
-	v[2].b = 0.5f + sinf(t/2.f * PI * 3.f/3.f ) * 0.5f;
+//	v[0].r = 0.5f + sinf(t + PI * 1.f/3.f ) * 0.5f;
+//	v[1].g = 0.5f + sinf(t + PI * 2.f/3.f ) * 0.5f;
+//	v[2].b = 0.5f + sinf(t + PI * 3.f/3.f ) * 0.5f;
+
+	if(loops++ == 0)
+		printf("sizeof v is %d (%d)\n", sizeof(v), sizeof(Vtx));
+
 	glBindBuffer(GL_ARRAY_BUFFER, vtxbuf);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(v), v, GL_STATIC_DRAW);
 
-	GLfloat mvp[4*4] = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1 };
+	static float x;
+
+	x = sinf(t);
+
+	GLfloat mvp[4*4] = { 1, 0, 0, 0,
+						 0, 1, 0, 0,
+						 0, 0,-1, 0,
+						 0, 0, 0, 1 };
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, tex->id);
+
+	GLint loc = glGetUniformLocation(prg, "uTex");
+	glUniform1i(loc, 0);
+
 	glUseProgram(prg);
 	glUniformMatrix4fv(uMVP_loc, 1, GL_FALSE, mvp);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	glXSwapBuffers(xw.dpy, xw.win);
 
