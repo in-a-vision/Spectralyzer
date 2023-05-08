@@ -250,8 +250,9 @@ static const char* fs_txt =
 static GLuint prg, vtxbuf;
 static GLint uMVP_loc, aPos_loc, aCol_loc, uTex_loc, aUV1_loc;
 
-typedef struct Vtx { float x, y, z, r, g, b; } Vtx;
-
+typedef struct Vtx {
+	float x, y, z, r, g, b;
+} Vtx;
 
 typedef struct Image {
 	GLuint w, h, stride, vstride, format, type, datasize, flags;
@@ -265,21 +266,18 @@ typedef struct Texture {
 	Image *img;
 } Texture;
 
-Texture *tex;
 
-int MakeTexture() {
-	tex = malloc(sizeof(Texture));
+Texture *NewTexture(int w, int h) {
+	Texture *tex = malloc(sizeof(Texture));
 	assert(tex);
 	tex->img = malloc(sizeof(Image));
 	assert(tex->img);
 
-	tex->img->w = 1024;
-	tex->img->h = 1024;
-	tex->img->datasize = 1024*1024*4;
+	tex->img->w = w;
+	tex->img->h = h;
+	tex->img->datasize = w*h*4;
 	tex->img->data = malloc(tex->img->datasize);
 	tex->internalformat = GL_RGBA;
-
-
 
 	glGenTextures(1, &tex->id);
 	glBindTexture(GL_TEXTURE_2D, tex->id);
@@ -289,13 +287,13 @@ int MakeTexture() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 	glPixelStorei(GL_UNPACK_ROW_LENGTH, tex->img->w);
 	
-//	glTexSubImage2D(GL_TEXTURE_2D, 0, dx, dy, w, h, img->format, img->type, img->data);
-
+	return tex;
 }
 
-void UpdateTexture(Texture *tex) {
+void UploadTexture(Texture *tex) {
 	glBindTexture(GL_TEXTURE_2D, tex->id);
 	glTexImage2D(GL_TEXTURE_2D, 0, tex->internalformat, tex->img->w, tex->img->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex->img->data);
+//	glTexSubImage2D(GL_TEXTURE_2D, 0, dx, dy, w, h, img->format, img->type, img->data);
 
 	if(tex->mipmap) glGenerateMipmap(GL_TEXTURE_2D);
 }
@@ -343,9 +341,6 @@ int InitGL() {
 	glEnableVertexAttribArray(aUV1_loc);
 	glVertexAttribPointer(aUV1_loc, 2, GL_FLOAT, GL_FALSE, sizeof(Vtx), (void*)(sizeof(float) * 3));
 
-
-	MakeTexture();
-
 	return 0;
 }
 
@@ -383,16 +378,6 @@ static int loops;
 void Draw() {
 	float t = GetTime();
 
-	int *data = (int*)tex->img->data;
-	for(int y=0; y<1024; y++)
-		for(int x=0; x<1024; x++) {
-			*data++ = y*x;
-
-		}
-
-	UpdateTexture(tex);
-
-
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	Vtx v[6] = {
@@ -422,8 +407,8 @@ void Draw() {
 						 0, 0,-1, 0,
 						 0, 0, 0, 1 };
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, tex->id);
+//	glActiveTexture(GL_TEXTURE0);
+//	glBindTexture(GL_TEXTURE_2D, tex->id);
 
 	GLint loc = glGetUniformLocation(prg, "uTex");
 	glUniform1i(loc, 0);

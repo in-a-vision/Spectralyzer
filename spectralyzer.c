@@ -8,7 +8,7 @@
 
 #include "rvfft_sorenson.c"
 
-#define PI 3.1415
+//#define PI 3.1415
 
 #define WIDTH 1920
 #define HEIGHT 1080
@@ -93,8 +93,14 @@ int main(int argc, char* argv[]) {
   InitSnd();
   InitGL();
 
+  Texture *tex = NewTexture(1024, 1024);
+
+  Sound *snd = NewSound(10.0);
+
+  int loops=0;
 
 	while(!quit) {
+
 		XWinProc();
 
 		if(keys[_ESC_] || keys[_Q_])
@@ -104,11 +110,20 @@ int main(int argc, char* argv[]) {
 
     }
 
-    Rec();
+    Rec(snd->data, 800);
+
+    memcpy(tex->img->data+(loops%1024)*4096, snd->data, 800*2*4);
+
+	  UploadTexture(tex);
+
+  	glActiveTexture(GL_TEXTURE0);
+	  glBindTexture(GL_TEXTURE_2D, tex->id);
 
     Draw();
-	}
 
+    loops++;
+
+	}
 	XWinDestroy();
 
 	return 0;
