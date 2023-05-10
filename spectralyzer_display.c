@@ -223,28 +223,21 @@ static const char* vs_txt =
 	"precision lowp float;"
 	"uniform mat4 uMVP;"
 	"attribute vec4 aPos;"
-//	"attribute vec3 aCol;"
 	"attribute vec2 aUV1;"
-//	"varying vec3 vCol;"
 	"varying vec2 vUV1;"
 	"void main()"
 	"{"
-//		"vCol = aCol;"
 		"vUV1 = aUV1;"
 		"gl_Position = uMVP * aPos;"
 	"}";
 
 static const char* fs_txt =
 	"precision lowp float;"
-//	"varying vec3 vCol;"
 	"varying vec2 vUV1;"
 	"uniform sampler2D uTex;"
 	"void main()"
 	"{"
-//		"if(gl_FragCoord.x > 0.0)"
 		"gl_FragColor = texture(uTex, vUV1);"
-//		"else"
-//		"gl_FragColor = vec4(vCol, 1.0);"
 	"}";
 
 static GLuint prg, vtxbuf;
@@ -309,7 +302,6 @@ int InitGL() {
 
 	glXSwapIntervalEXT(xw.dpy, xw.win, 1);
 
-//	WAJS_SetupCanvas(640, 480);
 	glViewport(0, 0, 640, 480);
 
 	GLuint vs = glCreateShader(GL_VERTEX_SHADER);
@@ -344,38 +336,10 @@ int InitGL() {
 	return 0;
 }
 
-#if 0
-char *vs_txt = {
-  "in vec3 position;"
-  "out vec3 cubeCoord;"
-  "void main() {"
-  "  cubeCoord = position;"
-  "  // [...]\n"
-  "}"
-};
-
-char *fs_txt = {
-  "in vec3 cubeCoord;"
-  "uniform samplerCube cubeTex;"
-  "void main() {"
-  "    vec4 color = texture(cubeTex, cubeCoord);"
-  "    // [...]\n"
-  "}"
-};
-
-uint32_t indices[6] = { 0, 1, 2,   0, 2, 3 };
-GLfloat vertices[] = {
-//   x      y      z     
-     1.0f,  1.0f,  1.0f,   1.0f, 1.0f, 
-     1.0f, -1.0f,  1.0f,   1.0f, 0.0f,  
-    -1.0f, -1.0f,  1.0f,   0.0f, 0.0f,  
-    -1.0f,  1.0f,  1.0f,   0.0f, 1.0f
-};
-#endif
-
-static int loops;
-
 void Draw() {
+
+	static int loops;
+
 	float t = GetTime();
 
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -385,22 +349,12 @@ void Draw() {
 		{-1.f,-1.f, 0.f, 0.f, 0.f, },
 		{ 1.f,-1.f, 0.f, 0.f, 1.f, },
 		{-1.f, 1.f, 0.f, 1.f, 0.f, },
-		{ 1.f, 1.f, 0.f, 0.f, 0.f, },
+		{ 1.f, 1.f, 0.f, 1.f, 1.f, },
 		{ 1.f,-1.f, 0.f, 0.f, 1.f, },
 	};
-//	v[0].r = 0.5f + sinf(t + PI * 1.f/3.f ) * 0.5f;
-//	v[1].g = 0.5f + sinf(t + PI * 2.f/3.f ) * 0.5f;
-//	v[2].b = 0.5f + sinf(t + PI * 3.f/3.f ) * 0.5f;
-
-	if(loops++ == 0)
-		printf("sizeof v is %d (%d)\n", sizeof(v), sizeof(Vtx));
 
 	glBindBuffer(GL_ARRAY_BUFFER, vtxbuf);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(v), v, GL_STATIC_DRAW);
-
-	static float x;
-
-	x = sinf(t);
 
 	GLfloat mvp[4*4] = { 1, 0, 0, 0,
 						 0, 1, 0, 0,

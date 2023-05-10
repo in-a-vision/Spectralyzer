@@ -1,4 +1,5 @@
 #include <malloc.h>
+#include <math.h>
 
 //
 //	                 FFT library
@@ -20,7 +21,7 @@
 
 /////////////////////////////////////////////////////////
 // Sorensen in-place split-radix FFT for real values
-// data: array of doubles:
+// data: array of floats:
 // re(0),re(1),re(2),...,re(size-1)
 // 
 // output:
@@ -31,10 +32,10 @@
 // Sorensen et al: Real-Valued Fast Fourier Transform Algorithms,
 // IEEE Trans. ASSP, ASSP-35, No. 6, June 1987
 
-void realfft_split(double *data,long n){
+void realfft_split(float *data,long n){
 
   long i,j,k,i5,i6,i7,i8,i0,id,i1,i2,i3,i4,n2,n4,n8;
-  double t1,t2,t3,t4,t5,t6,a3,ss1,ss3,cc1,cc3,a,e,sqrt2;
+  float t1,t2,t3,t4,t5,t6,a3,ss1,ss3,cc1,cc3,a,e,sqrt2;
   
   sqrt2=sqrt(2.0);
   n4=n-1;
@@ -162,7 +163,7 @@ for(k=n;k>2;k>>=1){
 
 /////////////////////////////////////////////////////////
 // Sorensen in-place split-radix FFT for real values
-// data: array of doubles:
+// data: array of floats:
 // re(0),re(1),re(2),...,re(size-1)
 // 
 // output:
@@ -172,25 +173,22 @@ for(k=n;k>2;k>>=1){
 // Source: 
 // Source: see the routines it calls ...
 
-void realfft_split_unshuffled(double *data,long n){
+void realfft_split_unshuffled(float *data, float *data2, long n){
 
-	double *data2;
 	long i,j;
 
 	realfft_split(data,n);
 	//unshuffling - not in-place
-	data2=(double *)malloc(n*sizeof(double));
 	j=n/2;
 	data2[0]=data[0];
 	data2[1]=data[j];
 	for(i=1;i<j;i++) {data2[i+i]=data[i];data2[i+i+1]=data[n-i];}
 	for(i=0;i<n;i++) data[i]=data2[i];
-	free(data2);
 }
 
 /////////////////////////////////////////////////////////
 // Sorensen in-place inverse split-radix FFT for real values
-// data: array of doubles:
+// data: array of floats:
 // re(0),re(1),re(2),...,re(size/2),im(size/2-1),...,im(1)
 // 
 // output:
@@ -201,10 +199,10 @@ void realfft_split_unshuffled(double *data,long n){
 // Sorensen et al: Real-Valued Fast Fourier Transform Algorithms,
 // IEEE Trans. ASSP, ASSP-35, No. 6, June 1987
 
-void irealfft_split(double *data,long n){
+void irealfft_split(float *data,long n){
 
   long i,j,k,i5,i6,i7,i8,i0,id,i1,i2,i3,i4,n2,n4,n8,n1;
-  double t1,t2,t3,t4,t5,a3,ss1,ss3,cc1,cc3,a,e,sqrt2;
+  float t1,t2,t3,t4,t5,a3,ss1,ss3,cc1,cc3,a,e,sqrt2;
   
   sqrt2=sqrt(2.0);
   
@@ -324,7 +322,7 @@ for(k=n;k>2;k>>=1){
 
 /////////////////////////////////////////////////////////
 // Sorensen in-place radix-2 FFT for real values
-// data: array of doubles:
+// data: array of floats:
 // re(0),re(1),re(2),...,re(size-1)
 // 
 // output:
@@ -335,10 +333,10 @@ for(k=n;k>2;k>>=1){
 // Sorensen et al: Real-Valued Fast Fourier Transform Algorithms,
 // IEEE Trans. ASSP, ASSP-35, No. 6, June 1987
 
-void realfft_radix2(double *data,long n){
+void realfft_radix2(float *data,long n){
 
-    double  xt,a,e, t1, t2, cc, ss;
-    long  i, j, k, n1, n2, n3, n4, i1, i2, i3, i4;
+    float xt,a,e,t1,t2,cc,ss;
+    long i,j,k,n1,n2,n3,n4,i1,i2,i3,i4;
 
 	n4=n-1;
   //data shuffling
@@ -402,7 +400,7 @@ void realfft_radix2(double *data,long n){
 
 /////////////////////////////////////////////////////////
 // Sorensen in-place split-radix FFT for real values
-// data: array of doubles:
+// data: array of floats:
 // re(0),re(1),re(2),...,re(size-1)
 // 
 // output:
@@ -412,18 +410,15 @@ void realfft_radix2(double *data,long n){
 // Source: 
 // Source: see the routines it calls ...
 
-void realfft_radix2_unshuffled(double *data,long n){
+void realfft_radix2_unshuffled(float *data,	float *data2, long n){
 	
-	double *data2;
 	long i,j;
 
 	//unshuffling - not in-place
 	realfft_radix2(data,n);
-	data2=(double *)malloc(n*sizeof(double));
 	j=n/2;
 	data2[0]=data[0];
 	data2[1]=data[j];
 	for(i=1;i<j;i++) {data2[i+i]=data[i];data2[i+i+1]=data[n-i];}
 	for(i=0;i<n;i++) data[i]=data2[i];
-	free(data2);
 }
