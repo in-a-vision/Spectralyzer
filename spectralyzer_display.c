@@ -275,7 +275,7 @@ Texture *NewTexture(int w, int h) {
 	glGenTextures(1, &tex->id);
 	glBindTexture(GL_TEXTURE_2D, tex->id);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR/*GL_NEAREST*/);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 	glPixelStorei(GL_UNPACK_ROW_LENGTH, tex->img->w);
@@ -319,7 +319,6 @@ int InitGL() {
 
 	uMVP_loc = glGetUniformLocation(prg, "uMVP");
 	aPos_loc = glGetAttribLocation(prg, "aPos");
-//	aCol_loc = glGetAttribLocation(prg, "aCol");
 	aUV1_loc = glGetAttribLocation(prg, "aUV1");
 	uTex_loc = glGetAttribLocation(prg, "uTex");
 
@@ -328,8 +327,6 @@ int InitGL() {
 
 	glEnableVertexAttribArray(aPos_loc);
 	glVertexAttribPointer(aPos_loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vtx), (void*)0);
-//	glEnableVertexAttribArray(aCol_loc);
-//	glVertexAttribPointer(aCol_loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vtx), (void*)(sizeof(float) * 3));
 	glEnableVertexAttribArray(aUV1_loc);
 	glVertexAttribPointer(aUV1_loc, 2, GL_FLOAT, GL_FALSE, sizeof(Vtx), (void*)(sizeof(float) * 3));
 
